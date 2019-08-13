@@ -5,14 +5,23 @@ int trigPinL = 3;                   // 왼쪽 초음파 3번핀 연결
 int echoPinL = 2;                   // 왼쪽 초음파 2번핀 연결
 int trigPinR = 7;                   // 오른쪽 초음파 5번핀 연결
 int echoPinR = 4;                   // 오른쪽 초음파 4번핀 연결
+int trigPinLW = 7;                   // 왼쪽 날개
+int echoPinLW = 4;                   // 왼쪽 날개
+int trigPinRW = 7;                   // 오른쪽 날개
+int echoPinRW = 4;                   // 오른쪽 날개
 
+//long Ulta_d = 0;
+//long Ultrasonic_sensing();
 long durationC;
 long durationL;
 long durationR;
+long durationLW;
+long durationRW;
 long distanceC;
 long distanceL;
 long distanceR;
-
+long distanceLW;
+long distanceRW;
 int RightMotor_E_pin = 5;      // 오른쪽 모터의 Enable & PWM
 int RightMotor_1_pin = 8;      // 오른쪽 모터 제어선 IN1
 int RightMotor_2_pin = 9;     // 오른쪽 모터 제어선 IN2
@@ -21,27 +30,23 @@ int LeftMotor_4_pin = 11;      // 왼쪽 모터 제어선 IN4
 int LeftMotor_E_pin = 6;      // 왼쪽 모터의 Enable & PWM
 int E_carSpeed = 153; // 최대 속도의  60 %
 int prev_speed = 0;
-
-/*#define CAR_DIR_FW  1   // 전진.
+#define CAR_DIR_FW  1   // 전진.
 #define CAR_DIR_BW  2   // 후진.
 #define CAR_DIR_LF  3   // 좌회전.
 #define CAR_DIR_RF  4   // 우회전
 #define CAR_DIR_ST  5   // 정지.
-char E_carDirection = 0;*/
-
-
-void HCar_Go();
-void HCar_Back();
-void HCar_Stop();
-void HCar_Left();
-void HCar_Right();
-void HCar_Update();
+char E_carDirection = 0;
+void SmartCar_Go();
+void SmartCar_Back();
+void SmartCar_Stop();
+void SmartCar_Left();
+void SmartCar_Right();
+void SmartCar_Update();
 void Obstacle_Check();
-void Distance_Measurement1();
-void Distance_Measurement2();
-void Distance_Measurement3();
-
-
+void Distance_Measurement();
+//void Servo_rotation1();
+//void Servo_rotation2();
+int Edu_count = 0;
 void setup() {
     
    pinMode(echoPinC, INPUT);                  // echoPin 입력
@@ -50,6 +55,10 @@ void setup() {
    pinMode(trigPinL, OUTPUT);                 // trigPin 출력
    pinMode(echoPinR, INPUT);                  // echoPin 입력
    pinMode(trigPinR, OUTPUT);                 // trigPin 출력
+   pinMode(echoPinLW, INPUT);                  // echoPin 입력
+   pinMode(trigPinLW, OUTPUT);                 // trigPin 출력
+   pinMode(echoPinRw, INPUT);                  // echoPin 입력
+   pinMode(trigPinRW, OUTPUT);                 // trigPin 출력
    
    pinMode(RightMotor_E_pin, OUTPUT);        // 출력모드로 설정
    pinMode(RightMotor_1_pin, OUTPUT);
@@ -57,9 +66,8 @@ void setup() {
    pinMode(LeftMotor_3_pin, OUTPUT);
    pinMode(LeftMotor_4_pin, OUTPUT);
    pinMode(LeftMotor_E_pin, OUTPUT);
-
-   
-   
+   Serial.begin(9600); // PC와 아두이노간 시리얼 통신속도를 9600bps로 설정
+   Serial.println("Welcome Eduino!");
    digitalWrite(RightMotor_E_pin, HIGH);     // 오른쪽 모터의 Enable 핀 활성화
    digitalWrite(LeftMotor_E_pin, HIGH);      // 왼쪽 모터의 Enable 핀 활성화
 }
@@ -70,41 +78,37 @@ void loop() {
 }
 
 void Obstacle_Check() {
-   Distance_Measurement1(); 
-   HCar_Go();
+    Distance_Measurement1(); 
+   SmartCar_Go;
    while (distanceC < 700) {
-    
-      if(distanceC < 100){
-         HCar_Back();
-         delay(700);
-         /*HCar_Stop();
+      if(distanceC<200){
+         SmartCar_Back();
+         delay(500);
+         SmartCar_Stop();
          delay(200);
 
          Distance_Measurement1();
          Distance_Measurement2();
-         Distance_Measurement3();*/
-         
+         Distance_Measurement3();
+         Distance_Measurement4();
+         Distance_Measurement5();
       }
-      else if (distanceC > 100 && distanceC < 350) {
-          if (distanceL < distanceR) {
-            HCar_Right();
+      else if (distanceC >200 && distanceC < 350) {
+          if (distanceL + distanceLW < distanceR + distanceRW) {
+            SmartCar_Right();
             delay(200);
           }
-          else if (distanceL > distanceR) {
-            HCar_Left();
+          else if (distanceL + distanceLW > distanceR + distanceRW) {
+            SmartCar_Left();
             delay(200);
           }
           else{
-            HCar_Go();
+            SmartCar_Go();
           }
       }
       else{
-         HCar_NGo();
+         SmartCar_NGo();
       }
-
-       Distance_Measurement1();
-       Distance_Measurement2();
-       Distance_Measurement3();
    }
 }
 
@@ -118,7 +122,6 @@ void Distance_Measurement1() { // 센터
     distanceC = ((float)(340 * durationC) / 1000) / 2;
     delay(5);
 }
-
 void Distance_Measurement2() { // 왼쪽
   digitalWrite(trigPinL, LOW);
   delay(2);
@@ -129,7 +132,6 @@ void Distance_Measurement2() { // 왼쪽
   distanceL = ((float)(340 * durationL) / 1000) / 2;
   delay(5);
 }
-
 void Distance_Measurement3() { // 오른쪽
   digitalWrite(trigPinR, LOW);
   delay(2);
@@ -140,9 +142,28 @@ void Distance_Measurement3() { // 오른쪽
   distanceR = ((float)(340 * durationR) / 1000) / 2;
   delay(5);
 }
-
+void Distance_Measurement4() { // 왼쪽 날개 
+  digitalWrite(trigPinLW, LOW);
+  delay(2);
+  digitalWrite(trigPinLW, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPinLW, LOW);
+  durationLW = pulseIn(echoPinLW, HIGH);
+  distanceLW = ((float)(340 * durationLW) / 1000) / 2;
+  delay(5);
+}
+void Distance_Measurement5() { // 오른쪽 날개
+  digitalWrite(trigPinRW, LOW);
+  delay(2);
+  digitalWrite(trigPinRW, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPinRW, LOW);
+  durationRW = pulseIn(echoPinRW, HIGH);
+  distanceRW = ((float)(340 * durationRW) / 1000) / 2;
+  delay(5);
+}
 // 스마트카 동작 함수들
-void HCar_Go()  // 전진
+void SmartCar_Go()  // 전진
 {
   digitalWrite(RightMotor_1_pin, HIGH);
   digitalWrite(RightMotor_2_pin, LOW);
@@ -157,24 +178,19 @@ void HCar_Go()  // 전진
   prev_speed = E_carSpeed;
   
 }
-void HCar_NGo()  
+void SmartCar_NGo()  
 {  
-  digitalWrite(RightMotor_1_pin, HIGH);
-  digitalWrite(RightMotor_2_pin, LOW);
-  digitalWrite(LeftMotor_3_pin, HIGH);
-  digitalWrite(LeftMotor_4_pin, LOW);
-  
-  if(distanceL > distanceR){              // 오른쪽에 가까울 때
-    analogWrite(RightMotor_E_pin, prev_speed * 1.1);           
-    analogWrite(LeftMotor_E_pin, prev_speed * 0.9);            
-  }
- else if(distanceL < distanceR){
+ if(distanceLW > distanceRW){              // 오른쪽에 가까울 때
+  analogWrite(RightMotor_E_pin, prev_speed * 1.1);           
+  analogWrite(LeftMotor_E_pin, prev_speed * 0.9);            
+ }
+ else if(distanceLW < distanceRW{
   analogWrite(RightMotor_E_pin, prev_speed * 0.9);           
   analogWrite(LeftMotor_E_pin, prev_speed * 1.1);
  }
  
 } 
-void HCar_Back() // 후진
+void SmartCar_Back() // 후진
 {
   digitalWrite(RightMotor_1_pin, LOW);
   digitalWrite(RightMotor_2_pin, HIGH);
@@ -187,8 +203,7 @@ void HCar_Back() // 후진
   }
   prev_speed = E_carSpeed;
 }
-
-void HCar_Left()  // 좌회전
+void SmartCar_Left()  // 좌회전
 {
   digitalWrite(RightMotor_1_pin, HIGH);
   digitalWrite(RightMotor_2_pin, LOW);
@@ -201,7 +216,7 @@ void HCar_Left()  // 좌회전
   }
   prev_speed = E_carSpeed;
 }
-void HCar_Right() // 우회전
+void SmartCar_Right() // 우회전
 {
   digitalWrite(RightMotor_1_pin, HIGH);
   digitalWrite(RightMotor_2_pin, LOW);
@@ -214,20 +229,20 @@ void HCar_Right() // 우회전
   }
   prev_speed = E_carSpeed;
 }
-void HCar_Stop()  // 정지
+void SmartCar_Stop()  // 정지
 {
-   /*if (E_carDirection == CAR_DIR_FW || E_carDirection == CAR_DIR_LF || E_carDirection == CAR_DIR_RF) {
+  if (E_carDirection == CAR_DIR_FW || E_carDirection == CAR_DIR_LF || E_carDirection == CAR_DIR_RF) {
+    for (int i = E_carSpeed; i >= 0; i = i - 5) {
+     
+  } else if (E_carDirection == CAR_ analogWrite(RightMotor_E_pin, i);
+      analogWrite(LeftMotor_E_pin, i);
+      delay(20);
+    }DIR_BW) {
     for (int i = E_carSpeed; i >= 0; i = i - 5) {
       analogWrite(RightMotor_E_pin, i);
       analogWrite(LeftMotor_E_pin, i);
       delay(20);
     }
-  } else if (E_carDirection == CAR_DIR_BW) {*/
-    for (int i = E_carSpeed; i >= 0; i = i - 5) {
-      analogWrite(RightMotor_E_pin, i);
-      analogWrite(LeftMotor_E_pin, i);
-      delay(20);
-    //}
   }
   digitalWrite(RightMotor_E_pin, LOW); // 정지
   digitalWrite(LeftMotor_E_pin, LOW);
