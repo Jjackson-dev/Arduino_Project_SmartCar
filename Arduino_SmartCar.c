@@ -5,13 +5,21 @@ int trigPinL = 3;                   // 왼쪽 초음파 3번핀 연결
 int echoPinL = 2;                   // 왼쪽 초음파 2번핀 연결
 int trigPinR = 7;                   // 오른쪽 초음파 5번핀 연결
 int echoPinR = 4;                   // 오른쪽 초음파 4번핀 연결
+int trigPinLW = 7;                   // 왼쪽 날개
+int echoPinLW = 4;                   // 왼쪽 날개
+int trigPinRW = 7;                   // 오른쪽 날개
+int echoPinRW = 4;                   // 오른쪽 날개
 
 long durationC;
 long durationL;
 long durationR;
+long durationLW;
+long durationRW;
 long distanceC;
 long distanceL;
 long distanceR;
+long distanceLW;
+long distanceRW;
 
 int RightMotor_E_pin = 5;      // 오른쪽 모터의 Enable & PWM
 int RightMotor_1_pin = 8;      // 오른쪽 모터 제어선 IN1
@@ -40,6 +48,8 @@ void Obstacle_Check();
 void Distance_Measurement1();
 void Distance_Measurement2();
 void Distance_Measurement3();
+void Distance_Measurement4();
+void Distance_Measurement5();
 
 
 void setup() {
@@ -50,6 +60,10 @@ void setup() {
    pinMode(trigPinL, OUTPUT);                 // trigPin 출력
    pinMode(echoPinR, INPUT);                  // echoPin 입력
    pinMode(trigPinR, OUTPUT);                 // trigPin 출력
+   pinMode(echoPinLW, INPUT);                  // echoPin 입력
+   pinMode(trigPinLW, OUTPUT);                 // trigPin 출력
+   pinMode(echoPinRw, INPUT);                  // echoPin 입력
+   pinMode(trigPinRW, OUTPUT);                 // trigPin 출력
    
    pinMode(RightMotor_E_pin, OUTPUT);        // 출력모드로 설정
    pinMode(RightMotor_1_pin, OUTPUT);
@@ -82,15 +96,17 @@ void Obstacle_Check() {
 
          Distance_Measurement1();
          Distance_Measurement2();
-         Distance_Measurement3();*/
+         Distance_Measurement3();
+         Distance_Measurement4();
+         Distance_Measurement5();*/
          
       }
-      else if (distanceC > 100 && distanceC < 350) {
-          if (distanceL < distanceR) {
+        else if (distanceC >200 && distanceC < 350) {
+          if (distanceL + distanceLW < distanceR + distanceRW) {
             HCar_Right();
             delay(200);
           }
-          else if (distanceL > distanceR) {
+          else if (distanceL + distanceLW > distanceR + distanceRW) {
             HCar_Left();
             delay(200);
           }
@@ -105,6 +121,8 @@ void Obstacle_Check() {
        Distance_Measurement1();
        Distance_Measurement2();
        Distance_Measurement3();
+       Distance_Measurement4();
+       Distance_Measurement5();
    }
 }
 
@@ -140,6 +158,26 @@ void Distance_Measurement3() { // 오른쪽
   distanceR = ((float)(340 * durationR) / 1000) / 2;
   delay(5);
 }
+void Distance_Measurement4() { // 왼쪽 날개 
+  digitalWrite(trigPinLW, LOW);
+  delay(2);
+  digitalWrite(trigPinLW, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPinLW, LOW);
+  durationLW = pulseIn(echoPinLW, HIGH);
+  distanceLW = ((float)(340 * durationLW) / 1000) / 2;
+  delay(5);
+}
+void Distance_Measurement5() { // 오른쪽 날개
+  digitalWrite(trigPinRW, LOW);
+  delay(2);
+  digitalWrite(trigPinRW, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPinRW, LOW);
+  durationRW = pulseIn(echoPinRW, HIGH);
+  distanceRW = ((float)(340 * durationRW) / 1000) / 2;
+  delay(5);
+}
 
 // 스마트카 동작 함수들
 void HCar_Go()  // 전진
@@ -164,14 +202,14 @@ void HCar_NGo()
   digitalWrite(LeftMotor_3_pin, HIGH);
   digitalWrite(LeftMotor_4_pin, LOW);
   
-  if(distanceL > distanceR){              // 오른쪽에 가까울 때
+   if(distanceLW > distanceRW){              // 오른쪽에 가까울 때
     analogWrite(RightMotor_E_pin, prev_speed * 1.1);           
     analogWrite(LeftMotor_E_pin, prev_speed * 0.9);            
+   }
+   else if(distanceLW < distanceRW){
+   analogWrite(RightMotor_E_pin, prev_speed * 0.9);           
+   analogWrite(LeftMotor_E_pin, prev_speed * 1.1);
   }
- else if(distanceL < distanceR){
-  analogWrite(RightMotor_E_pin, prev_speed * 0.9);           
-  analogWrite(LeftMotor_E_pin, prev_speed * 1.1);
- }
  
 } 
 void HCar_Back() // 후진
