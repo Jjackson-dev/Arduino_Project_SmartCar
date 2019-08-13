@@ -10,8 +10,6 @@ int echoPinLW = 4;                   // 왼쪽 날개
 int trigPinRW = 7;                   // 오른쪽 날개
 int echoPinRW = 4;                   // 오른쪽 날개
 
-//long Ulta_d = 0;
-//long Ultrasonic_sensing();
 long durationC;
 long durationL;
 long durationR;
@@ -32,13 +30,6 @@ int LeftMotor_E_pin = 6;      // 왼쪽 모터의 Enable & PWM
 int E_carSpeed = 153; // 최대 속도의  60 %
 int prev_speed = 0;
 
-#define CAR_DIR_FW  1   // 전진.
-#define CAR_DIR_BW  2   // 후진.
-#define CAR_DIR_LF  3   // 좌회전.
-#define CAR_DIR_RF  4   // 우회전
-#define CAR_DIR_ST  5   // 정지.
-
-char E_carDirection = 0;
 void SmartCar_Go();
 void SmartCar_Back();
 void SmartCar_Stop();
@@ -51,10 +42,6 @@ void Distance_Measurement2();
 void Distance_Measurement3();
 void Distance_Measurement4();
 void Distance_Measurement5();
-//void Servo_rotation1();
-//void Servo_rotation2();
-int Edu_count = 0;
-
 
 void setup() {
     
@@ -75,8 +62,6 @@ void setup() {
    pinMode(LeftMotor_3_pin, OUTPUT);
    pinMode(LeftMotor_4_pin, OUTPUT);
    pinMode(LeftMotor_E_pin, OUTPUT);
-   Serial.begin(9600); // PC와 아두이노간 시리얼 통신속도를 9600bps로 설정
-   Serial.println("Welcome Eduino!");
    digitalWrite(RightMotor_E_pin, HIGH);     // 오른쪽 모터의 Enable 핀 활성화
    digitalWrite(LeftMotor_E_pin, HIGH);      // 왼쪽 모터의 Enable 핀 활성화
 }
@@ -253,19 +238,12 @@ void SmartCar_Right() // 우회전
 }
 void SmartCar_Stop()  // 정지
 {
-   if (E_carDirection == CAR_DIR_FW || E_carDirection == CAR_DIR_LF || E_carDirection == CAR_DIR_RF) {
+
     for (int i = E_carSpeed; i >= 0; i = i - 5) {
       analogWrite(RightMotor_E_pin, i);
       analogWrite(LeftMotor_E_pin, i);
       delay(20);
     }
-  } else if (E_carDirection == CAR_DIR_BW) {
-    for (int i = E_carSpeed; i >= 0; i = i - 5) {
-      analogWrite(RightMotor_E_pin, i);
-      analogWrite(LeftMotor_E_pin, i);
-      delay(20);
-    }
-  }
   digitalWrite(RightMotor_E_pin, LOW); // 정지
   digitalWrite(LeftMotor_E_pin, LOW);
 }
