@@ -23,13 +23,6 @@ int LeftMotor_E_pin = 6;      // 왼쪽 모터의 Enable & PWM
 int E_carSpeed = 153; // 최대 속도의  60 %
 int prev_speed = 0;
 
-#define CAR_DIR_FW  1   // 전진.
-#define CAR_DIR_BW  2   // 후진.
-#define CAR_DIR_LF  3   // 좌회전.
-#define CAR_DIR_RF  4   // 우회전
-#define CAR_DIR_ST  5   // 정지.
-
-char E_carDirection = 0;
 void SmartCar_Go();
 void SmartCar_Back();
 void SmartCar_Stop();
@@ -216,19 +209,13 @@ void SmartCar_Right() // 우회전
 }
 void SmartCar_Stop()  // 정지
 {
-   if (E_carDirection == CAR_DIR_FW || E_carDirection == CAR_DIR_LF || E_carDirection == CAR_DIR_RF) {
+   
     for (int i = E_carSpeed; i >= 0; i = i - 5) {
       analogWrite(RightMotor_E_pin, i);
       analogWrite(LeftMotor_E_pin, i);
       delay(20);
     }
-  } else if (E_carDirection == CAR_DIR_BW) {
-    for (int i = E_carSpeed; i >= 0; i = i - 5) {
-      analogWrite(RightMotor_E_pin, i);
-      analogWrite(LeftMotor_E_pin, i);
-      delay(20);
-    }
-  }
+  
   digitalWrite(RightMotor_E_pin, LOW); // 정지
   digitalWrite(LeftMotor_E_pin, LOW);
 }
