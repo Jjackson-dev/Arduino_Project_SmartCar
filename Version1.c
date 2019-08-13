@@ -5,23 +5,14 @@ int trigPinL = 3;                   // 왼쪽 초음파 3번핀 연결
 int echoPinL = 2;                   // 왼쪽 초음파 2번핀 연결
 int trigPinR = 7;                   // 오른쪽 초음파 5번핀 연결
 int echoPinR = 4;                   // 오른쪽 초음파 4번핀 연결
-int trigPinLW = 7;                   // 왼쪽 날개
-int echoPinLW = 4;                   // 왼쪽 날개
-int trigPinRW = 7;                   // 오른쪽 날개
-int echoPinRW = 4;                   // 오른쪽 날개
 
-//long Ulta_d = 0;
-//long Ultrasonic_sensing();
+
 long durationC;
 long durationL;
 long durationR;
-long durationLW;
-long durationRW;
 long distanceC;
 long distanceL;
 long distanceR;
-long distanceLW;
-long distanceRW;
 
 int RightMotor_E_pin = 5;      // 오른쪽 모터의 Enable & PWM
 int RightMotor_1_pin = 8;      // 오른쪽 모터 제어선 IN1
@@ -49,8 +40,6 @@ void Obstacle_Check();
 void Distance_Measurement1();
 void Distance_Measurement2();
 void Distance_Measurement3();
-void Distance_Measurement4();
-void Distance_Measurement5();
 //void Servo_rotation1();
 //void Servo_rotation2();
 int Edu_count = 0;
@@ -64,10 +53,6 @@ void setup() {
    pinMode(trigPinL, OUTPUT);                 // trigPin 출력
    pinMode(echoPinR, INPUT);                  // echoPin 입력
    pinMode(trigPinR, OUTPUT);                 // trigPin 출력
-   pinMode(echoPinLW, INPUT);                  // echoPin 입력
-   pinMode(trigPinLW, OUTPUT);                 // trigPin 출력
-   pinMode(echoPinRw, INPUT);                  // echoPin 입력
-   pinMode(trigPinRW, OUTPUT);                 // trigPin 출력
    
    pinMode(RightMotor_E_pin, OUTPUT);        // 출력모드로 설정
    pinMode(RightMotor_1_pin, OUTPUT);
@@ -75,6 +60,7 @@ void setup() {
    pinMode(LeftMotor_3_pin, OUTPUT);
    pinMode(LeftMotor_4_pin, OUTPUT);
    pinMode(LeftMotor_E_pin, OUTPUT);
+   
    Serial.begin(9600); // PC와 아두이노간 시리얼 통신속도를 9600bps로 설정
    Serial.println("Welcome Eduino!");
    digitalWrite(RightMotor_E_pin, HIGH);     // 오른쪽 모터의 Enable 핀 활성화
@@ -87,7 +73,7 @@ void loop() {
 }
 
 void Obstacle_Check() {
-    Distance_Measurement1(); 
+   Distance_Measurement1(); 
    SmartCar_Go();
    while (distanceC < 700) {
     
@@ -100,16 +86,14 @@ void Obstacle_Check() {
          Distance_Measurement1();
          Distance_Measurement2();
          Distance_Measurement3();
-         Distance_Measurement4();
-         Distance_Measurement5();
          
       }
-      else if (distanceC 100 && distanceC < 350) {
-          if (distanceL + distanceLW < distanceR + distanceRW) {
+      else if (distanceC > 100 && distanceC < 350) {
+          if (distanceL < distanceR) {
             SmartCar_Right();
             delay(200);
           }
-          else if (distanceL + distanceLW > distanceR + distanceRW) {
+          else if (distanceL > distanceR) {
             SmartCar_Left();
             delay(200);
           }
@@ -120,12 +104,10 @@ void Obstacle_Check() {
       else{
          SmartCar_NGo();
       }
-
+ //추가해주세요 그래야 읽어요
       Distance_Measurement1();
       Distance_Measurement2();
       Distance_Measurement3();
-      Distance_Measurement4();
-      Distance_Measurement5();
    }
 }
 
@@ -159,26 +141,7 @@ void Distance_Measurement3() { // 오른쪽
   distanceR = ((float)(340 * durationR) / 1000) / 2;
   delay(5);
 }
-void Distance_Measurement4() { // 왼쪽 날개 
-  digitalWrite(trigPinLW, LOW);
-  delay(2);
-  digitalWrite(trigPinLW, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPinLW, LOW);
-  durationLW = pulseIn(echoPinLW, HIGH);
-  distanceLW = ((float)(340 * durationLW) / 1000) / 2;
-  delay(5);
-}
-void Distance_Measurement5() { // 오른쪽 날개
-  digitalWrite(trigPinRW, LOW);
-  delay(2);
-  digitalWrite(trigPinRW, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPinRW, LOW);
-  durationRW = pulseIn(echoPinRW, HIGH);
-  distanceRW = ((float)(340 * durationRW) / 1000) / 2;
-  delay(5);
-}
+
 // 스마트카 동작 함수들
 void SmartCar_Go()  // 전진
 {
@@ -202,11 +165,11 @@ void SmartCar_NGo()
   digitalWrite(LeftMotor_3_pin, HIGH);
   digitalWrite(LeftMotor_4_pin, LOW);
   
-  if(distanceLW > distanceRW){              // 오른쪽에 가까울 때
+  if(distanceL > distanceR){              // 오른쪽에 가까울 때
     analogWrite(RightMotor_E_pin, prev_speed * 1.1);           
     analogWrite(LeftMotor_E_pin, prev_speed * 0.9);            
   }
- else if(distanceLW < distanceRW){
+ else if(distanceL < distanceR){
   analogWrite(RightMotor_E_pin, prev_speed * 0.9);           
   analogWrite(LeftMotor_E_pin, prev_speed * 1.1);
  }
