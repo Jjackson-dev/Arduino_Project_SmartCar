@@ -234,10 +234,11 @@ void HCar_Left()  // 좌회전
   digitalWrite(RightMotor_2_pin, LOW);
   digitalWrite(LeftMotor_3_pin, HIGH);
   digitalWrite(LeftMotor_4_pin, LOW);
-  for (int i = prev_speed; i <= E_carSpeed; i = i + 5) {
+  for (int i = prev_speed; distanceC < 1000; i = i + 5) {  //수정 필요??
     analogWrite(RightMotor_E_pin, i * 1.5);           // 140%
     analogWrite(LeftMotor_E_pin, i * 0.1);            // 20%
-    delay(50);
+    delay(20);
+    Distance_Measurement1();
   }
   prev_speed = E_carSpeed;
 }
@@ -247,12 +248,14 @@ void HCar_Right() // 우회전
   digitalWrite(RightMotor_2_pin, LOW);
   digitalWrite(LeftMotor_3_pin, HIGH);
   digitalWrite(LeftMotor_4_pin, LOW);
-  for (int i = prev_speed; i <= E_carSpeed; i = i + 5) {
+  for (int i = prev_speed; distanceC < 1000; i = i + 5) {  //수정 필요??
     analogWrite(RightMotor_E_pin, i * 0.1);           // 20%
     analogWrite(LeftMotor_E_pin, i * 1.5);            // 140%
-    delay(50);
+    delay(20);
+    Distance_Measurement1();
   }
   prev_speed = E_carSpeed;
+
 }
 void HCar_Stop()  // 정지
 {
