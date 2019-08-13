@@ -1,5 +1,6 @@
 //출력핀(trig)과 입력핀(echo) 설정
 //수정완료??
+//힘든 하루... 
 int trigPinC = 13;                  // 디지털 13번 핀에 연결
 int echoPinC = 12;                  // 디지털 12번 핀에 연결
 int trigPinL = 3;                   // 왼쪽 초음파 3번핀 연결
