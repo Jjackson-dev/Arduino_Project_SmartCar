@@ -1,6 +1,13 @@
+/*
+Ardunino_SmartCar project
+Version 5
+Date : 19.08.14
+Note : Change HCar_Left(), HCar_Right() ... distanceC -> E_CarSpeed
+       delete HCar_Stop() ... in Obstacle_Check()
+       Delay Change in Obstacle_Check() ... 700 -> 550
+*/
+
 //출력핀(trig)과 입력핀(echo) 설정
-//수정완료??
-//힘든 하루....
 int trigPinC = 13;                  // 디지털 13번 핀에 연결
 int echoPinC = 12;                  // 디지털 12번 핀에 연결
 int trigPinL = 3;                   // 왼쪽 초음파 3번핀 연결
@@ -32,14 +39,6 @@ int LeftMotor_E_pin = 6;      // 왼쪽 모터의 Enable & PWM
 int E_carSpeed = 153; // 최대 속도의  60 %
 int prev_speed = 0;
 
-/*#define CAR_DIR_FW  1   // 전진.
-#define CAR_DIR_BW  2   // 후진.
-#define CAR_DIR_LF  3   // 좌회전.
-#define CAR_DIR_RF  4   // 우회전
-#define CAR_DIR_ST  5   // 정지.
-char E_carDirection = 0;*/
-
-
 void HCar_Go();
 void HCar_Back();
 void HCar_Stop();
@@ -64,7 +63,7 @@ void setup() {
    pinMode(trigPinR, OUTPUT);                 // trigPin 출력
    pinMode(echoPinLW, INPUT);                  // echoPin 입력
    pinMode(trigPinLW, OUTPUT);                 // trigPin 출력
-   pinMode(echoPinRw, INPUT);                  // echoPin 입력
+   pinMode(echoPinRW, INPUT);                  // echoPin 입력
    pinMode(trigPinRW, OUTPUT);                 // trigPin 출력
    
    pinMode(RightMotor_E_pin, OUTPUT);        // 출력모드로 설정
@@ -92,15 +91,15 @@ void Obstacle_Check() {
     
       if(distanceC < 100){   
          HCar_Back();
-         delay(700);
-         /*HCar_Stop();
-         delay(200);
+         delay(550);
+         // HCar_Stop();
+         // delay(200);
 
          Distance_Measurement1();
          Distance_Measurement2();
          Distance_Measurement3();
          Distance_Measurement4();
-         Distance_Measurement5();*/
+         Distance_Measurement5();
          
       }
         else if (distanceC > 100 && distanceC < 350) {
@@ -205,12 +204,12 @@ void HCar_NGo()
   digitalWrite(LeftMotor_4_pin, LOW);
   
    if(distanceLW > distanceRW){              // 오른쪽에 가까울 때
-    analogWrite(RightMotor_E_pin, prev_speed * 1.1);           
-    analogWrite(LeftMotor_E_pin, prev_speed * 0.9);            
+    analogWrite(RightMotor_E_pin, prev_speed * 1.5);           
+    analogWrite(LeftMotor_E_pin, prev_speed * 0.5);            
    }
    else if(distanceLW < distanceRW){
-   analogWrite(RightMotor_E_pin, prev_speed * 0.9);           
-   analogWrite(LeftMotor_E_pin, prev_speed * 1.1);
+   analogWrite(RightMotor_E_pin, prev_speed * 1.5);           
+   analogWrite(LeftMotor_E_pin, prev_speed * 0.5);
   }
  
 } 
@@ -234,11 +233,10 @@ void HCar_Left()  // 좌회전
   digitalWrite(RightMotor_2_pin, LOW);
   digitalWrite(LeftMotor_3_pin, HIGH);
   digitalWrite(LeftMotor_4_pin, LOW);
-  for (int i = prev_speed; distanceC < 1000; i = i + 5) {  //수정 필요??
+ for (int i = prev_speed; i <= E_carSpeed; i = i + 5)  {  //수정 필요??
     analogWrite(RightMotor_E_pin, i * 1.5);           // 140%
     analogWrite(LeftMotor_E_pin, i * 0.1);            // 20%
-    delay(20);
-    Distance_Measurement1();
+    delay(50);
   }
   prev_speed = E_carSpeed;
 }
@@ -248,29 +246,20 @@ void HCar_Right() // 우회전
   digitalWrite(RightMotor_2_pin, LOW);
   digitalWrite(LeftMotor_3_pin, HIGH);
   digitalWrite(LeftMotor_4_pin, LOW);
-  for (int i = prev_speed; distanceC < 1000; i = i + 5) {  //수정 필요??
+  for (int i = prev_speed; i <= E_carSpeed; i = i + 5) {
     analogWrite(RightMotor_E_pin, i * 0.1);           // 20%
     analogWrite(LeftMotor_E_pin, i * 1.5);            // 140%
-    delay(20);
-    Distance_Measurement1();
+    delay(50);
   }
   prev_speed = E_carSpeed;
 
 }
 void HCar_Stop()  // 정지
 {
-   /*if (E_carDirection == CAR_DIR_FW || E_carDirection == CAR_DIR_LF || E_carDirection == CAR_DIR_RF) {
     for (int i = E_carSpeed; i >= 0; i = i - 5) {
       analogWrite(RightMotor_E_pin, i);
       analogWrite(LeftMotor_E_pin, i);
       delay(20);
-    }
-  } else if (E_carDirection == CAR_DIR_BW) {*/
-    for (int i = E_carSpeed; i >= 0; i = i - 5) {
-      analogWrite(RightMotor_E_pin, i);
-      analogWrite(LeftMotor_E_pin, i);
-      delay(20);
-    //}
   }
   digitalWrite(RightMotor_E_pin, LOW); // 정지
   digitalWrite(LeftMotor_E_pin, LOW);
