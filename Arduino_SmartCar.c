@@ -3,8 +3,10 @@ Ardunino_SmartCar project
 Version 5
 Date : 19.08.14
 Note : Change HCar_Left(), HCar_Right() ... distanceC -> E_CarSpeed
-       delete HCar_Stop() ... in Obstacle_Check()
+       delete HCar_Stop() in Obstacle_Check()
        Delay Change in Obstacle_Check() ... 700 -> 550
+       Add HCar_NGoSmall(), HCar_NGoBig() in Obstacle_Check()
+       Add Function HCar_NGoSmall(), HCar_NGoBig()
 */
 
 //출력핀(trig)과 입력핀(echo) 설정
@@ -115,8 +117,11 @@ void Obstacle_Check() {
             HCar_Go();
           }
       }
+      else if(distanceC>350 && distanceC<500){
+        HCar_NGoBig();
+      }
       else{
-         HCar_NGo();
+        HCar_NGoSmall();
       }
 
        Distance_Measurement1();
@@ -193,38 +198,41 @@ void HCar_Go()  // 전진
     analogWrite(LeftMotor_E_pin, i);
     delay(20);
   }
-  prev_speed = E_carSpeed;
-  
+  prev_speed = E_carSpeed;  
 }
-void HCar_NGo()  
+
+void HCar_NGoSmall()  
 {  
   digitalWrite(RightMotor_1_pin, HIGH);
   digitalWrite(RightMotor_2_pin, LOW);
   digitalWrite(LeftMotor_3_pin, HIGH);
   digitalWrite(LeftMotor_4_pin, LOW);
   
-   if(distanceLW > distanceRW){              // 오른쪽에 가까울 때
+  if(distanceL > distanceR){              // 오른쪽에 가까울 때
+    analogWrite(RightMotor_E_pin, prev_speed * 1.1);           
+    analogWrite(LeftMotor_E_pin, prev_speed * 0.9);            
+  }
+ else if(distanceL < distanceR){
+  analogWrite(RightMotor_E_pin, prev_speed * 0.9);           
+  analogWrite(LeftMotor_E_pin, prev_speed * 1.1);
+ }
+}
+
+void HCar_NGoBig()  
+{
+  digitalWrite(RightMotor_1_pin, HIGH);
+  digitalWrite(RightMotor_2_pin, LOW);
+  digitalWrite(LeftMotor_3_pin, HIGH);
+  digitalWrite(LeftMotor_4_pin, LOW);
+  
+  if(distanceL > distanceR){              // 오른쪽에 가까울 때
     analogWrite(RightMotor_E_pin, prev_speed * 1.5);           
     analogWrite(LeftMotor_E_pin, prev_speed * 0.5);            
-   }
-   else if(distanceLW < distanceRW){
-   analogWrite(RightMotor_E_pin, prev_speed * 1.5);           
-   analogWrite(LeftMotor_E_pin, prev_speed * 0.5);
   }
- 
-} 
-void HCar_Back() // 후진
-{
-  digitalWrite(RightMotor_1_pin, LOW);
-  digitalWrite(RightMotor_2_pin, HIGH);
-  digitalWrite(LeftMotor_3_pin, LOW);
-  digitalWrite(LeftMotor_4_pin, HIGH);
-  for (int i = prev_speed; i <= E_carSpeed; i = i + 5) {
-    analogWrite(RightMotor_E_pin, i);
-    analogWrite(LeftMotor_E_pin, i);
-    delay(20);
+  else if(distanceL < distanceR){
+  analogWrite(RightMotor_E_pin, prev_speed * 0.5);           
+  analogWrite(LeftMotor_E_pin, prev_speed * 1.5);
   }
-  prev_speed = E_carSpeed;
 }
 
 void HCar_Left()  // 좌회전

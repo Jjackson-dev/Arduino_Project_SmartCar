@@ -1,19 +1,11 @@
-
-/*
-Expriment0814 
-일자 : 2019 08 14
-특이사항 : stop제거/ back딜레이 550 수정 
-*/
-
 //출력핀(trig)과 입력핀(echo) 설정
-
+/*NGo small / NGo Big 추가 */
 int trigPinC = 13;                  // 디지털 13번 핀에 연결
 int echoPinC = 12;                  // 디지털 12번 핀에 연결
 int trigPinL = 3;                   // 왼쪽 초음파 3번핀 연결
 int echoPinL = 2;                   // 왼쪽 초음파 2번핀 연결
 int trigPinR = 7;                   // 오른쪽 초음파 5번핀 연결
 int echoPinR = 4;                   // 오른쪽 초음파 4번핀 연결
-
 
 long durationC;
 long durationL;
@@ -32,6 +24,8 @@ int E_carSpeed = 153; // 최대 속도의  60 %
 int prev_speed = 0;
 
 void HCar_Go();
+void HCar_NGoSmall();
+void HCar_NGoBig();
 void HCar_Back();
 void HCar_Stop();
 void HCar_Left();
@@ -73,7 +67,7 @@ void loop() {
 void Obstacle_Check() {
    Distance_Measurement1(); 
    HCar_Go();
-   while (distanceC < 700) {
+   while (distanceC < 1000) {
     
       if(distanceC < 100){
          HCar_Back();
@@ -99,8 +93,13 @@ void Obstacle_Check() {
             HCar_Go();
           }
       }
+
+      else if(distanceC>350 && distanceC<500){
+        HCar_NGoBig();
+      }
+      
       else{
-         HCar_NGo();
+         HCar_NGoSmall();
       }
 
       Distance_Measurement1();
@@ -156,7 +155,8 @@ void HCar_Go()  // 전진
   prev_speed = E_carSpeed;
   
 }
-void HCar_NGo()  
+
+void HCar_NGoSmall()  
 {  
   digitalWrite(RightMotor_1_pin, HIGH);
   digitalWrite(RightMotor_2_pin, LOW);
@@ -171,8 +171,26 @@ void HCar_NGo()
   analogWrite(RightMotor_E_pin, prev_speed * 0.9);           
   analogWrite(LeftMotor_E_pin, prev_speed * 1.1);
  }
+}
+
+void HCar_NGoBig()  
+{
+  digitalWrite(RightMotor_1_pin, HIGH);
+  digitalWrite(RightMotor_2_pin, LOW);
+  digitalWrite(LeftMotor_3_pin, HIGH);
+  digitalWrite(LeftMotor_4_pin, LOW);
+  
+  if(distanceL > distanceR){              // 오른쪽에 가까울 때
+    analogWrite(RightMotor_E_pin, prev_speed * 1.5);           
+    analogWrite(LeftMotor_E_pin, prev_speed * 0.5);            
+  }
+  else if(distanceL < distanceR){
+  analogWrite(RightMotor_E_pin, prev_speed * 0.5);           
+  analogWrite(LeftMotor_E_pin, prev_speed * 1.5);
+ }
  
-} 
+}
+
 void HCar_Back() // 후진
 {
   digitalWrite(RightMotor_1_pin, LOW);
