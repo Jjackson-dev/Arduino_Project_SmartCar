@@ -89,7 +89,7 @@ void loop() {
 void Obstacle_Check() {
    Distance_Measurement1(); 
    HCar_Go();
-   while (distanceC < 700) {
+   while (distanceC < 1000) {
     
       if(distanceC < 100){   
          HCar_Back();
@@ -116,11 +116,11 @@ void Obstacle_Check() {
           else{
             HCar_Go();
           }
-      }
-      else if(distanceC>350 && distanceC<500){
+        }
+     else if(distanceC>350 && distanceC<500){
         HCar_NGoBig();
-      }
-      else{
+     }
+     else{
         HCar_NGoSmall();
       }
 
