@@ -7,6 +7,7 @@ Note : Change HCar_Left(), HCar_Right() ... distanceC -> E_CarSpeed
        Delay Change in Obstacle_Check() ... 700 -> 550
        Add HCar_NGoSmall(), HCar_NGoBig() in Obstacle_Check()
        Add Function HCar_NGoSmall(), HCar_NGoBig()
+       Ploblem solving ... Obstacle_Check()
 */
 
 //출력핀(trig)과 입력핀(echo) 설정
@@ -80,15 +81,25 @@ void setup() {
    digitalWrite(RightMotor_E_pin, HIGH);     // 오른쪽 모터의 Enable 핀 활성화
    digitalWrite(LeftMotor_E_pin, HIGH);      // 왼쪽 모터의 Enable 핀 활성화
 }
-
+/*
+void Obstacle_Check() {
+  HCar_Go();
+  delay(100);
+   Distance_Measurement1(); 
+   
+   while (distanceC < 1000) {
+*/
 void loop() {
   Obstacle_Check();
   delay(100);
 }
 
 void Obstacle_Check() {
+  HCar_Go();
+  delay(100);
    Distance_Measurement1(); 
-   HCar_Go();
+
+   
    while (distanceC < 1000) {
     
       if(distanceC < 100){   
