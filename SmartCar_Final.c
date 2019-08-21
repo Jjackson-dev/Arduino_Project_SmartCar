@@ -106,7 +106,6 @@ float b_center;
 //float prev_left = 0;
 //float prev_right = 0;
 
-
 // 앞바퀴 조향
 void SetSteering(float steering)
 {
@@ -417,14 +416,14 @@ void AutoDriving()
  
 
         }
-        /*else if (f_center >= 500 && left >= side_detect ){
-
-            compute_speed = -1;
-            compute_stee
-            ring = 1;
-            compute_speed = 0.03;
+        
+        else if ( f_center >= 500 && left >= side_detect ){   //KK알고리즘
+          
+            compute_speed = 1;
             compute_steering = -1; 
-        }*/
+ 
+
+        }
 
         else if(  f_left <= diagonal_detect || f_right <= diagonal_detect) // 좌우측방 어느 곳이라도 감지된다면
         {
