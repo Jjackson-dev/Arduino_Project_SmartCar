@@ -31,13 +31,14 @@ boolean debug_driving_status = false;
 #define L_ECHO  A1  // 좌측 초음파 센서 ECHO 핀
 #define R_TRIG  2   // 우측 초음파 센서 TRIG 핀
 #define R_ECHO  A5  // 우측 초음파 센서 ECHO 핀
-
+#define ANGLE_LIMIT 45
 #define MAX_DISTANCE  2000 // 초음파 센서의 최대 감지거리
 
 // 자동차 튜닝 파라미터
 int servo_dir = 1; // 서보 회전 방향(동일: 1, 반대:-1)
 int motor_dir = 1; // 모터 회전 방향(동일:1, 반대:-1)
-int angle_limit = 50; // 서보 모터 회전 제한 각 (단위: 도)
+int angle_limit = ANGLE_LIMIT; // 서보 모터 회전 제한 각 (단위: 도)
+int angle_limit_b = 60;
 int angle_offset = 0; // 서보 모터 중앙각 오프셋 (단위: 도)
 int max_rc_pwm = 255; // RC조종 모터 최대 출력 (0 ~ 255)
 int min_rc_pwm = 110; // RC조종 모터 최소 출력 (0 ~ 255)
@@ -50,11 +51,11 @@ int battery_cell = 2; // 배터리 셀 개수
 float voltage_error = 1.08; // 전압 오차 (1이 오차 없음)
 // 자율주행 튜닝 파라미터
 //int max_ai_pwm = 200; // 자율주행 모터 최대 출력 (0 ~ 255)
-int max_ai_pwm = 200; // 자율주행 모터 최대 출력 (0 ~ 255)
+int max_ai_pwm = 220; // 자율주행 모터 최대 출력 (0 ~ 255)
 int min_ai_pwm = 80; // 자율주행 모터 최소 출력 (0 ~ 255)
 int center_detect = 200; // 전방 감지 거리 (단위: mm)
 int center_start = 160; // 전방 출발 거리 (단위: mm)
-//int center_stop = 50; // 전방 멈춤 거리 (단위: mm)
+//int center_stop = 5; // 전방 멈춤 거리 (단위: mm)
 int center_stop = 70; // 전방 멈춤 거리 (단위: mm)
 int diagonal_detect = 80; // 대각 감지 거리 (단위: mm)
 int diagonal_start = 120; // 대각 출발 거리 (단위: mm)
@@ -367,6 +368,8 @@ void AutoDriving()
         f_center = GetDistance(FC_TRIG, FC_ECHO);
         f_left = GetDistance(FL_TRIG, FL_ECHO);
         f_right = GetDistance(FR_TRIG, FR_ECHO);
+        left = GetDistance(L_TRIG,L_ECHO);
+        right = GetDistance(R_TRIG,R_ECHO);
         if(f_center <= center_stop || f_left <= diagonal_stop || f_right <= diagonal_stop)  // 전방에 감지되면
         {
 
@@ -399,14 +402,11 @@ void AutoDriving()
         #endif
         
             // 후진한다
-            compute_speed = -0.1;
-            // 아래 기존 소스 주석처리
-//            if(cur_steering > 0)
-//                compute_steering = -1;
-//            else
-//                compute_steering = 1;
+            angle_limit = angle_limit_b;
 
-            if (f_left > f_right) 
+            compute_speed = -0.6;
+
+            if (f_left + left > f_right + right) 
             {
                 compute_steering = 1;
             }
@@ -414,27 +414,28 @@ void AutoDriving()
             {
                 compute_steering = -1;
             }
-            
+ 
+
         }
         else if(f_left <= diagonal_detect || f_right <= diagonal_detect) // 좌우측방 어느 곳이라도 감지된다면
         {
-//            if(f_center > center_detect) // 전방은 감지되지 않는다면
-//            {
-//                #ifdef DEBUG
-//                    Serial.println("FRONT NO DETECT");
-//                #endif
-//                // 좌우측방 중 한 곳만 감지되었음
-//                if(f_left < f_right) // 좌측방이 감지되었다면
-//                {
-//                    // 우측으로 최대 조향
-//                    compute_steering = 1;
-//                }
-//                else if(f_right < f_left) // 우측방이 감지되었다면
-//                {
-//                    // 좌측으로 최대 조향
-//                    compute_steering = -1;
-//                }
-//            }
+            if(f_center > center_stop) // 전방은 감지되지 않는다면
+            {
+                #ifdef DEBUG
+                    Serial.println("FRONT NO DETECT");
+                #endif
+                // 좌우측방 중 한 곳만 감지되었음
+                if(f_left +left < f_right + right) // 좌측방이 감지되었다면
+                {
+                    // 우측으로 최대 조향
+                    compute_steering = 1;
+                }
+                else // 우측방이 감지되었다면
+                {
+                    // 좌측으로 최대 조향
+                    compute_steering = -1;
+                }
+            }
         }
         else
         {
@@ -454,23 +455,32 @@ void AutoDriving()
             // 조향 결정
             left = GetDistance(L_TRIG, L_ECHO);
             right = GetDistance(R_TRIG, R_ECHO);
-            if(left <= side_start && right <= side_start) // 좌우 모두 감지되면
-            {
-                // 거리차에 따라 조향한다
-                float diff = (float)(right - side_stop) - (float)(left - side_stop);
-                diff /= (float)(side_start - side_stop);
-                // 결과에 Gain을 적용하여 반응성을 높일 수 있다
-                compute_steering = diff * steering_gain;
-            }
+            if (left <= side_start && right <= side_start) // 좌우 모두 감지되면
+         {
+            // 거리차에 따라 조향한다
+            float diff = (float)(right - side_stop) - (float)(left - side_stop);
+            diff /= (float)(side_start - side_stop);
+            // 결과에 Gain을 적용하여 반응성을 높일 수 있다
+
+            if(f_center >= 700)
+               compute_steering = diff;
+
+            else if(700> f_center >200)
+               compute_steering = diff * steering_gain;
+         }
             else if(f_center <= center_detect && (left > side_detect || right > side_detect))
             // 전방은 감지되는데 어느 한쪽이라도 감지되지 않는다면
             {
-                if(left <= side_detect) // 좌측이 감지된다면
+                if (left + f_left < right + f_right) // 좌측이 감지된다면
                 {
                     // 우측으로 최대 조향
                     compute_steering = 1;
                 }
-                else if(right <= side_detect) // 우측이 감지된다면
+
+                else if (left + f_left == right + f_right){
+                    compute_steering = 0.1;
+                }
+                else  // 우측이 감지된다면
                 {
                     // 좌측으로 최대 조향
                     compute_steering = -1;
@@ -484,15 +494,21 @@ void AutoDriving()
         f_center = GetDistance(FC_TRIG, FC_ECHO);
         f_right = GetDistance(FR_TRIG, FR_ECHO);
         f_left = GetDistance(FL_TRIG, FL_ECHO);
+        left = GetDistance(L_TRIG,L_ECHO);
+        right = GetDistance(R_TRIG, R_ECHO);
+
         if(f_center > center_start && f_left > diagonal_start && f_right > diagonal_start) // 전방에 감지되지 않으면
         {
             // 조향을 반대로 꺾고 회피 종료
             compute_speed = 0.1;
-            if(cur_steering > 0) // 우 조향 중이면
-                servo.write(90);
+
+            if(left+f_left > right+f_right) // 우 조향 중이면
+                compute_steering = -1;
             else // 좌 조향 중이면
-                servo.write(90);
+                compute_steering = 1;
+        
         }
+        angle_limit = ANGLE_LIMIT;
     }
 
 
@@ -589,6 +605,7 @@ void setup()
     
     battery_time = millis();
     debug_time = millis(); 
+    StartAutoDriving();
 
     #ifdef DEBUG        
         Serial.print("FC");Serial.print("\t");
