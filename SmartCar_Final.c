@@ -57,7 +57,7 @@ int center_detect = 200; // 전방 감지 거리 (단위: mm)
 int center_start = 160; // 전방 출발 거리 (단위: mm)
 //int center_stop = 5; // 전방 멈춤 거리 (단위: mm)
 int center_stop = 70; // 전방 멈춤 거리 (단위: mm)
-int diagonal_detect = 80; // 대각 감지 거리 (단위: mm)
+int diagonal_detect = 100; // 대각 감지 거리 (단위: mm)
 int diagonal_start = 120; // 대각 출발 거리 (단위: mm)
 int diagonal_stop = 65; // 대각 멈춤 거리 (단위: mm)
 int side_detect = 250; // 좌우 감지 거리 (단위: mm)
@@ -371,7 +371,7 @@ void AutoDriving()
         left = GetDistance(L_TRIG,L_ECHO);
         right = GetDistance(R_TRIG,R_ECHO);
         if(f_center <= center_stop || f_left <= diagonal_stop || f_right <= diagonal_stop)  // 전방에 감지되면
-        {
+    {
 
           #ifdef DEBUG
             // 한번씩 체크        
@@ -404,7 +404,7 @@ void AutoDriving()
             // 후진한다
             angle_limit = angle_limit_b;
 
-            compute_speed = -0.6;
+            compute_speed = -0.3;
 
             if (f_left + left > f_right + right) 
             {
@@ -417,13 +417,17 @@ void AutoDriving()
  
 
         }
-        else if(f_left <= diagonal_detect || f_right <= diagonal_detect) // 좌우측방 어느 곳이라도 감지된다면
+        /*else if (f_center >= 500 && left >= side_detect ){
+
+            compute_speed = -1;
+            compute_stee
+            ring = 1;
+            compute_speed = 0.03;
+            compute_steering = -1; 
+        }*/
+
+        else if(  f_left <= diagonal_detect || f_right <= diagonal_detect) // 좌우측방 어느 곳이라도 감지된다면
         {
-            if(f_center > center_stop) // 전방은 감지되지 않는다면
-            {
-                #ifdef DEBUG
-                    Serial.println("FRONT NO DETECT");
-                #endif
                 // 좌우측방 중 한 곳만 감지되었음
                 if(f_left +left < f_right + right) // 좌측방이 감지되었다면
                 {
@@ -434,9 +438,10 @@ void AutoDriving()
                 {
                     // 좌측으로 최대 조향
                     compute_steering = -1;
-                }
-            }
+                 }
         }
+
+        
         else
         {
             // 전방과 좌우 센서만으로 제어한다
