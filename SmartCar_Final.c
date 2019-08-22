@@ -378,7 +378,7 @@ void AutoDriving()
         left = GetDistance(L_TRIG,L_ECHO);
         right = GetDistance(R_TRIG,R_ECHO);
         if(f_center <= center_stop || f_left <= diagonal_stop || f_right <= diagonal_stop)  // 전방에 감지되면
-    {
+        {
 
           #ifdef DEBUG
             // 한번씩 체크        
@@ -409,9 +409,18 @@ void AutoDriving()
         #endif
         
             // 후진한다
+            left = GetDistance(L_TRIG,L_ECHO);
+            right = GetDistance(R_TRIG,R_ECHO);
+            
+            if(left >= 150 && right >= 100){
+              compute_speed = backSpeed;
+              compute_steering = 1;
+            }
+
+            
             angle_limit = angle_limit_b;
 
-            compute_speed = backSpeed;
+            compute_speed = backSpeed; 
 
             if (f_left + left > f_right + right) 
             {
@@ -425,14 +434,23 @@ void AutoDriving()
  
 
         }
+        //KKA 수정사항 
         
-        else if ( f_center >= 500 && left >= side_detect && f_left > f_right ){   //KK알고리즘
+        else if ( f_center >= 150 && left >= side_detect && f_left > f_right ){   //KK알고리즘
 
             backSpeed = -0.1;
             center_stop = center_stop_b;
             angle_limit = angle_limit_b;
-            compute_speed = 0.1;
+            compute_speed = 0.3;
             compute_steering = -1; 
+        }
+        else if (f_center >= 150 && right >= side_detect && f_right > f_left ){
+            backSpeed = 0.1;
+            center_stop = center_stop_b;
+            angle_limit = angle_limit_b;
+            compute_speed = 0.3;
+            compute_steering = 1;
+
         }
         
         
