@@ -32,42 +32,42 @@ boolean debug_driving_status = false;
 #define R_TRIG  2   // 우측 초음파 센서 TRIG 핀
 #define R_ECHO  A5  // 우측 초음파 센서 ECHO 핀
 #define F_LEFT_STOP_LIMIT 65;
-#define CENTER_STOP_LIMIT 70
-#define ANGLE_LIMIT 45
+#define CENTER_STOP_LIMIT 70;
+#define ANGLE_LIMIT 60;                                                                                     //변경전 45;
 #define MAX_DISTANCE  2000 // 초음파 센서의 최대 감지거리
 
 // 자동차 튜닝 파라미터
 int servo_dir = 1; // 서보 회전 방향(동일: 1, 반대:-1)
 int motor_dir = 1; // 모터 회전 방향(동일:1, 반대:-1)
 int angle_limit = ANGLE_LIMIT; // 서보 모터 회전 제한 각 (단위: 도)
-int angle_limit_b = 60;
+int angle_limit_b = 100;                                                                                    //변경전 70;
 int angle_offset = 0; // 서보 모터 중앙각 오프셋 (단위: 도)
-int max_rc_pwm = 255; // RC조종 모터 최대 출력 (0 ~ 255)
+int max_rc_pwm = 240; // RC조종 모터 최대 출력 (0 ~ 255)
 int min_rc_pwm = 110; // RC조종 모터 최소 출력 (0 ~ 255)
 int punch_pwm = 200; // 정지 마찰력 극복 출력 (0 ~ 255)
 int punch_time = 50; // 정지 마찰력 극복 시간 (단위 msec)
-int stop_time = 30; // 전진후진 전환 시간 (단위 msec)
+int stop_time = 30; // 전진후진 전환 시간 (단위 msec)                                                               //30
 int melody_tempo = 3500; // 멜로디 연주 속도
 int melody_num = 41; // 멜로디 음 개수
 int battery_cell = 2; // 배터리 셀 개수
 float voltage_error = 1.08; // 전압 오차 (1이 오차 없음)
 // 자율주행 튜닝 파라미터
-//int max_ai_pwm = 200; // 자율주행 모터 최대 출력 (0 ~ 255)
-int max_ai_pwm = 210
+//int max_ai_pwm = 220; // 자율주행 모터 최대 출력 (0 ~ 255)
+int max_ai_pwm = 230;                                                                                         //변경전 200
 ; // 자율주행 모터 최대 출력 (0 ~ 255)
-int min_ai_pwm = 100; // 자율주행 모터 최소 출력 (0 ~ 255)
+int min_ai_pwm = 80; // 자율주행 모터 최소 출력 (0 ~ 255)
 int center_detect = 220; // 전방 감지 거리 (단위: mm)
 int center_start = 160; // 전방 출발 거리 (단위: mm)
 //int center_stop = 5; // 전방 멈춤 거리 (단위: mm)
 int center_stop = CENTER_STOP_LIMIT; // 전방 멈춤 거리 (단위: mm)
-int center_stop_b = 45;
+int center_stop_b = 50;
 int diagonal_detect = 100; // 대각 감지 거리 (단위: mm)
 int diagonal_start = 120; // 대각 출발 거리 (단위: mm)
 int diagonal_stop = F_LEFT_STOP_LIMIT; // 대각 멈춤 거리 (단위: mm)
 int side_detect = 250; // 좌우 감지 거리 (단위: mm)
 int side_start = 160; // 좌우 조향 시작 거리 (단위: mm)
 int side_stop = 50; // 좌우 조향 끝 거리 (단위: mm)
-float steering_gain = 1.2; // 좌우 조향 증폭상수
+float steering_gain = 1.4; // 좌우 조향 증폭상수
 float backSpeed = -0.3;
 
 
@@ -406,13 +406,11 @@ void AutoDriving()
             Serial.print(compute_speed);Serial.println();
             //Serial.println("-----------------------------");   
             debug_time = millis(); 
-        #endif
+            #endif
         
             // 후진한다
-            left = GetDistance(L_TRIG,L_ECHO);
-            right = GetDistance(R_TRIG,R_ECHO);
             
-            if(left >= 150 && right >= 100){
+            if( f_left >= 150 && f_right >= 120 ){            //KKA                                      // 150 -> 100   100-> 80
               compute_speed = backSpeed;
               compute_steering = 1;
             }
@@ -438,18 +436,19 @@ void AutoDriving()
         
         else if ( f_center >= 150 && left >= side_detect && f_left > f_right ){   //KK알고리즘
 
-            backSpeed = -0.1;
             center_stop = center_stop_b;
             angle_limit = angle_limit_b;
             compute_speed = 0.3;
-            compute_steering = -1; 
+            compute_steering = -0.8;
+            
         }
         else if (f_center >= 150 && right >= side_detect && f_right > f_left ){
-            backSpeed = 0.1;
+;
             center_stop = center_stop_b;
             angle_limit = angle_limit_b;
             compute_speed = 0.3;
-            compute_steering = 1;
+            compute_steering = 0.8;
+            
 
         }
         
@@ -458,16 +457,39 @@ void AutoDriving()
         else if(  f_left <= diagonal_detect || f_right <= diagonal_detect) // 좌우측방 어느 곳이라도 감지된다면
         {
                 // 좌우측방 중 한 곳만 감지되었음
-                if(f_left +left < f_right + right) // 좌측방이 감지되었다면
+             if(f_left +left < f_right + right) // 좌측방이 감지되었다면
                 {
                     // 우측으로 최대 조향
-                    compute_steering = 1;
+            center_stop = center_stop_b;
+            angle_limit = angle_limit_b;
+            compute_speed = 0.5;
+            compute_steering = 0.8;                                                                           //1
                 }
                 else // 우측방이 감지되었다면
                 {
-                    // 좌측으로 최대 조향
-                    compute_steering = -1;
+            center_stop = center_stop_b;
+            angle_limit = angle_limit_b;
+            compute_speed = 0.5;
+            compute_steering = -0.8;                                                                        //1
                  }
+        }
+        /*
+        //직선 KK알고리즘 추가 
+        else if ( f_left > 70 && f_center > center_detect && right < side_stop ){                  //변경전 left > dialgonal_start
+            
+            compute_steering = -1;
+
+            compute_speed = 0.1;
+            delay(500);
+            
+            compute_speed = 0.4;
+            delay(200);
+        
+        }
+        */
+            else if ( f_left > 100 && f_center > center_detect && f_right < diagonal_detect ){
+            compute_speed = -1;
+            compute_speed = 0.5;
         }
 
         
@@ -478,7 +500,7 @@ void AutoDriving()
             if(f_center <= center_detect) // 전방에 감지된다면
             {
                 // 거리에 따른 속도 결정
-                compute_speed = (float)(f_center - center_stop) / (float)(center_detect - center_stop);
+                compute_speed = (float)(f_center - center_stop) / (float)(center_detect - center_stop);                            //변경전 center_detect - center_stop;
             }
             else // 전방에 없다면
             {
@@ -505,7 +527,8 @@ void AutoDriving()
                 if (left + f_left < right + f_right) // 좌측이 감지된다면
                 {
                     // 우측으로 최대 조향
-                    compute_steering = 1;
+                    compute_steering = 1; 
+                                                                                           //추가
                 }
 
                 else if (left + f_left == right + f_right){
@@ -515,6 +538,7 @@ void AutoDriving()
                 {
                     // 좌측으로 최대 조향
                     compute_steering = -1;
+                                                                                             //추가
                 }
             }
         }
