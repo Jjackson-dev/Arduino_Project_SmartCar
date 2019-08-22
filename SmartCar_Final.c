@@ -31,6 +31,8 @@ boolean debug_driving_status = false;
 #define L_ECHO  A1  // 좌측 초음파 센서 ECHO 핀
 #define R_TRIG  2   // 우측 초음파 센서 TRIG 핀
 #define R_ECHO  A5  // 우측 초음파 센서 ECHO 핀
+#define F_LEFT_STOP_LIMIT 65;
+#define CENTER_STOP_LIMIT 70
 #define ANGLE_LIMIT 45
 #define MAX_DISTANCE  2000 // 초음파 센서의 최대 감지거리
 
@@ -51,19 +53,21 @@ int battery_cell = 2; // 배터리 셀 개수
 float voltage_error = 1.08; // 전압 오차 (1이 오차 없음)
 // 자율주행 튜닝 파라미터
 //int max_ai_pwm = 200; // 자율주행 모터 최대 출력 (0 ~ 255)
-int max_ai_pwm = 220; // 자율주행 모터 최대 출력 (0 ~ 255)
-int min_ai_pwm = 80; // 자율주행 모터 최소 출력 (0 ~ 255)
-int center_detect = 200; // 전방 감지 거리 (단위: mm)
+int max_ai_pwm = 210
+; // 자율주행 모터 최대 출력 (0 ~ 255)
+int min_ai_pwm = 100; // 자율주행 모터 최소 출력 (0 ~ 255)
+int center_detect = 220; // 전방 감지 거리 (단위: mm)
 int center_start = 160; // 전방 출발 거리 (단위: mm)
 //int center_stop = 5; // 전방 멈춤 거리 (단위: mm)
-int center_stop = 70; // 전방 멈춤 거리 (단위: mm)
+int center_stop = CENTER_STOP_LIMIT; // 전방 멈춤 거리 (단위: mm)
+int center_stop_b = 45;
 int diagonal_detect = 100; // 대각 감지 거리 (단위: mm)
 int diagonal_start = 120; // 대각 출발 거리 (단위: mm)
-int diagonal_stop = 65; // 대각 멈춤 거리 (단위: mm)
+int diagonal_stop = F_LEFT_STOP_LIMIT; // 대각 멈춤 거리 (단위: mm)
 int side_detect = 250; // 좌우 감지 거리 (단위: mm)
 int side_start = 160; // 좌우 조향 시작 거리 (단위: mm)
 int side_stop = 50; // 좌우 조향 끝 거리 (단위: mm)
-float steering_gain = 1.5; // 좌우 조향 증폭상수
+float steering_gain = 1.2; // 좌우 조향 증폭상수
 
 
 // 멜로디 음계
@@ -364,6 +368,8 @@ void AutoDriving()
     }
     else if(cur_speed > 0) // 현재 전진 중인 상태이면
     {
+        center_stop = CENTER_STOP_LIMIT;
+        angle_limit = ANGLE_LIMIT;
         f_center = GetDistance(FC_TRIG, FC_ECHO);
         f_left = GetDistance(FL_TRIG, FL_ECHO);
         f_right = GetDistance(FR_TRIG, FR_ECHO);
@@ -412,19 +418,22 @@ void AutoDriving()
             else 
             {
                 compute_steering = -1;
+                
             }
  
 
         }
-        
-        else if ( f_center >= 500 && left >= side_detect ){   //KK알고리즘
-          
+        /*
+        else if ( f_center >= 500 && left >= side_detect && f_left > f_right ){   //KK알고리즘
+
+            center_stop = center_stop_b;
+            angle_limit = angle_limit_b;
             compute_speed = 1;
             compute_steering = -1; 
- 
-
         }
-
+        */
+        
+        
         else if(  f_left <= diagonal_detect || f_right <= diagonal_detect) // 좌우측방 어느 곳이라도 감지된다면
         {
                 // 좌우측방 중 한 곳만 감지되었음
@@ -466,10 +475,7 @@ void AutoDriving()
             diff /= (float)(side_start - side_stop);
             // 결과에 Gain을 적용하여 반응성을 높일 수 있다
 
-            if(f_center >= 700)
-               compute_steering = diff;
-
-            else if(700> f_center >200)
+            
                compute_steering = diff * steering_gain;
          }
             else if(f_center <= center_detect && (left > side_detect || right > side_detect))
@@ -687,7 +693,8 @@ void loop()
 
             #ifdef DEBUG
                 String cmd = packet;
-                if(cmd.equals(" "))         // 디버그 모드시 정지, 시작 토글 명령
+                if(
+                cmd.equals(" "))         // 디버그 모드시 정지, 시작 토글 명령
                 {
                     if (debug_driving_status) 
                         debug_driving_status = false;
@@ -709,4 +716,4 @@ void loop()
         if(millis() - rc_time > 3000)
             SetSpeed(0);
     }
-}
+} 
