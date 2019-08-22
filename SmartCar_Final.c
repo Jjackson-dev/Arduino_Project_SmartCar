@@ -68,6 +68,7 @@ int side_detect = 250; // 좌우 감지 거리 (단위: mm)
 int side_start = 160; // 좌우 조향 시작 거리 (단위: mm)
 int side_stop = 50; // 좌우 조향 끝 거리 (단위: mm)
 float steering_gain = 1.2; // 좌우 조향 증폭상수
+float backSpeed = -0.3;
 
 
 // 멜로디 음계
@@ -368,6 +369,7 @@ void AutoDriving()
     }
     else if(cur_speed > 0) // 현재 전진 중인 상태이면
     {
+        backSpeed = -0.3;
         center_stop = CENTER_STOP_LIMIT;
         angle_limit = ANGLE_LIMIT;
         f_center = GetDistance(FC_TRIG, FC_ECHO);
@@ -409,7 +411,7 @@ void AutoDriving()
             // 후진한다
             angle_limit = angle_limit_b;
 
-            compute_speed = -0.3;
+            compute_speed = backSpeed;
 
             if (f_left + left > f_right + right) 
             {
@@ -423,15 +425,16 @@ void AutoDriving()
  
 
         }
-        /*
+        
         else if ( f_center >= 500 && left >= side_detect && f_left > f_right ){   //KK알고리즘
 
+            backSpeed = -0.1;
             center_stop = center_stop_b;
             angle_limit = angle_limit_b;
-            compute_speed = 1;
+            compute_speed = 0.1;
             compute_steering = -1; 
         }
-        */
+        
         
         
         else if(  f_left <= diagonal_detect || f_right <= diagonal_detect) // 좌우측방 어느 곳이라도 감지된다면
